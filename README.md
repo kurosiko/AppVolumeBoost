@@ -1,12 +1,12 @@
 # App Volume Boost
 
-特定のアプリだけを、他のアプリに影響させずに最大 +12 dB 増幅するWindowsアプリです。
+特定のアプリだけを、他のアプリに影響させずに最大1000%（約10倍）増幅するWindowsアプリです。
 
 ## 動作方式
 
 - Windowsのアクティブな音声セッションからアプリを一覧表示
 - 選択したアプリだけをVoicemeeterの仮想入力へルーティング
-- Voicemeeterの専用入力ストリップのゲインだけを変更
+- Voicemeeterの専用入力ストリップのゲインだけを変更（1000%まで）
 - 停止時に元の出力先とストリップ設定を復元
 - アプリ名ごとの設定を `%LOCALAPPDATA%\AppVolumeBoost\profiles.json` に保存
 
@@ -30,4 +30,4 @@ dotnet run --project .\AppVolumeBoost.csproj
 dotnet publish .\AppVolumeBoost.csproj -c Release -r win-x64 --self-contained true
 ```
 
-Windows 10 2004 (build 19041) 以降が必要です。音量を上げすぎると音割れするため、小さい値から調整してください。
+Windows 10 2004 (build 19041) 以降が必要です。100%は2倍、1000%は10倍相当です。音量を上げすぎると音割れするため、小さい値から調整してください。

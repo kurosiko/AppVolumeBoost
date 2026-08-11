@@ -34,9 +34,9 @@
             </StackPanel>
           </StackPanel>
 
-          <Slider Grid.Column="1" Minimum="0" Maximum="12" TickFrequency="1"
+          <Slider Grid.Column="1" Minimum="0" Maximum="1000" TickFrequency="100"
                   IsSnapToTickEnabled="False" VerticalAlignment="Center" Height="24"
-                  Value="{Binding BoostDb, UpdateSourceTrigger=PropertyChanged}"
+                  Value="{Binding BoostPercent, UpdateSourceTrigger=PropertyChanged}"
                   Tag="{Binding}" ValueChanged="BoostSlider_ValueChanged" />
 
           <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
@@ -85,7 +85,7 @@
     <Grid Grid.Row="3" Margin="0,14,0,0">
       <TextBlock x:Name="StatusText" Text="準備中…" FontSize="11"
                  Foreground="{StaticResource MutedTextBrush}" />
-      <TextBlock Text="+12 dBまで · 音割れに注意" FontSize="10"
+      <TextBlock Text="最大1000%（約10倍） · 音割れに注意" FontSize="10"
                  Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Right" />
     </Grid>
   </Grid>

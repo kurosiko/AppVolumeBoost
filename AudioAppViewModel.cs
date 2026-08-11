@@ -6,7 +6,7 @@ namespace AppVolumeBoost;
 
 public sealed class AudioAppViewModel : INotifyPropertyChanged
 {
-    private double _boostDb;
+    private double _boostPercent;
     private string _stateLabel = "通常音量";
 
     public required int ProcessId { get; init; }
@@ -17,20 +17,23 @@ public sealed class AudioAppViewModel : INotifyPropertyChanged
 
     public string ProcessLabel => $"{ProcessName}.exe  ·  PID {ProcessId}";
 
-    public double BoostDb
+    public double BoostPercent
     {
-        get => _boostDb;
+        get => _boostPercent;
         set
         {
-            var clamped = Math.Clamp(value, 0, 12);
-            if (Math.Abs(_boostDb - clamped) < 0.01) return;
-            _boostDb = clamped;
+            var clamped = AudioBoostMath.ClampPercent(value);
+            if (Math.Abs(_boostPercent - clamped) < 0.01) return;
+            _boostPercent = clamped;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(BoostDb));
             OnPropertyChanged(nameof(BoostLabel));
         }
     }
 
-    public string BoostLabel => BoostDb < 0.01 ? "+0 dB" : $"+{BoostDb:0.0} dB";
+    public double BoostDb => AudioBoostMath.PercentToDb(BoostPercent);
+
+    public string BoostLabel => BoostPercent < 0.01 ? "+0%" : $"+{BoostPercent:0}%";
 
     public string StateLabel
     {
@@ -47,4 +50,19 @@ public sealed class AudioAppViewModel : INotifyPropertyChanged
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+}
+
+internal static class AudioBoostMath
+{
+    public const double MaxBoostPercent = 1000;
+    public const double MaxGainDb = 20;
+
+    public static double ClampPercent(double percent) => Math.Clamp(percent, 0, MaxBoostPercent);
+
+    // 100% means 2x amplitude, and 1000% means 10x amplitude (+20 dB).
+    public static double PercentToDb(double percent) =>
+        20 * Math.Log10(1 + ClampPercent(percent) / 100);
+
+    public static double DbToPercent(double gainDb) =>
+        (Math.Pow(10, Math.Clamp(gainDb, 0, MaxGainDb) / 20) - 1) * 100;
 }

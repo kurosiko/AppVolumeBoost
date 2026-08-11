@@ -26,7 +26,7 @@ public sealed class AudioBoostEngine : IDisposable
     {
         var remote = _remote;
         if (remote is not null)
-            remote.SetBoostGain(_stripIndex, Math.Clamp(gainDb, 0, 12));
+            remote.SetBoostGain(_stripIndex, Math.Clamp(gainDb, 0, AudioBoostMath.MaxGainDb));
     }
 
     public async Task StartAsync(AudioAppViewModel app, double gainDb)
@@ -47,7 +47,7 @@ public sealed class AudioBoostEngine : IDisposable
 
             // The policy API applies the endpoint to the process's new/current audio stream.
             AudioPolicyRouter.SetRenderEndpoint(app.ProcessId, virtualDevice.ID);
-            remote.SetBoostGain(_stripIndex, Math.Clamp(gainDb, 0, 12));
+            remote.SetBoostGain(_stripIndex, Math.Clamp(gainDb, 0, AudioBoostMath.MaxGainDb));
             remote.SetHardwareRoute(_stripIndex, true);
 
             _remote = remote;
@@ -123,12 +123,14 @@ internal sealed class VoicemeeterRemote : IDisposable
     private delegate int GetTypeDelegate(ref int value);
     private delegate int GetFloatDelegate([MarshalAs(UnmanagedType.LPStr)] string name, out float value);
     private delegate int SetFloatDelegate([MarshalAs(UnmanagedType.LPStr)] string name, float value);
+    private delegate int SetParametersDelegate([MarshalAs(UnmanagedType.LPStr)] string script);
 
     private readonly LoginDelegate _login;
     private readonly LogoutDelegate _logout;
     private readonly GetTypeDelegate _getType;
     private readonly GetFloatDelegate _getFloat;
     private readonly SetFloatDelegate _setFloat;
+    private readonly SetParametersDelegate _setParameters;
 
     public int Type { get; }
     public int VirtualStripIndex { get; }
@@ -148,6 +150,7 @@ internal sealed class VoicemeeterRemote : IDisposable
             _getType = Load<GetTypeDelegate>("VBVMR_GetVoicemeeterType");
             _getFloat = Load<GetFloatDelegate>("VBVMR_GetParameterFloat");
             _setFloat = Load<SetFloatDelegate>("VBVMR_SetParameterFloat");
+            _setParameters = Load<SetParametersDelegate>("VBVMR_SetParameters");
 
             var result = _login();
             if (result != 0)
@@ -177,7 +180,7 @@ internal sealed class VoicemeeterRemote : IDisposable
         var prefix = $"Strip[{stripIndex}]";
         _oldGain ??= Get(prefix + ".gain");
         _oldA1 ??= Get(prefix + ".A1");
-        Check(_setFloat(prefix + ".gain", (float)gainDb), "Set strip gain");
+        SetGain(prefix, gainDb);
         Check(_setFloat(prefix + ".A1", 1), "Set strip A1");
     }
 
@@ -187,10 +190,25 @@ internal sealed class VoicemeeterRemote : IDisposable
     public void RestoreStrip(int stripIndex)
     {
         var prefix = $"Strip[{stripIndex}]";
-        if (_oldGain is float gain) _setFloat(prefix + ".gain", gain);
+        if (_oldGain is float gain) SetGain(prefix, gain);
         if (_oldA1 is float a1) _setFloat(prefix + ".A1", a1);
         _oldGain = null;
         _oldA1 = null;
+    }
+
+    private void SetGain(string prefix, double gainDb)
+    {
+        if (gainDb <= 12)
+        {
+            Check(_setFloat(prefix + ".gain", (float)gainDb), "Set strip gain");
+            return;
+        }
+
+        // Voicemeeter's ordinary gain setter stops at +12 dB. Its parameter
+        // script supports relative gain changes beyond the visible slider range.
+        var extraDb = gainDb - 12;
+        var script = $"{prefix}.gain=12.0;{prefix}.gain+={extraDb:0.###};";
+        Check(_setParameters(script), "Set extended strip gain");
     }
 
     private float Get(string name)

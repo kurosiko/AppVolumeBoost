@@ -48,7 +48,8 @@ public partial class MainWindow : Window
             _apps.Clear();
             foreach (var app in found)
             {
-                if (_savedProfiles.TryGetValue(app.ProcessName, out var db)) app.BoostDb = db;
+                if (_savedProfiles.TryGetValue(app.ProcessName, out var db))
+                    app.BoostPercent = AudioBoostMath.DbToPercent(db);
                 _apps.Add(app);
             }
 
@@ -129,6 +130,7 @@ public partial class MainWindow : Window
     private async void BoostSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (_refreshing || sender is not Slider { Tag: AudioAppViewModel app }) return;
+        var percent = app.BoostPercent;
         var db = app.BoostDb;
         _savedProfiles[app.ProcessName] = db;
         _profiles.Save(_apps);
@@ -147,7 +149,7 @@ public partial class MainWindow : Window
             {
                 _boostEngine.SetGainDb(db);
                 app.StateLabel = "ブースト中";
-                StatusText.Text = $"{app.DisplayName} を +{db:0.0} dB で増幅中";
+                StatusText.Text = $"{app.DisplayName} を +{percent:0}%（約+{db:0.0} dB）で増幅中";
             }
             else
             {
@@ -155,14 +157,14 @@ public partial class MainWindow : Window
                 StatusText.Text = $"{app.DisplayName} の音声処理を起動しています…";
                 await _boostEngine.StartAsync(app, db);
                 app.StateLabel = "ブースト中";
-                StatusText.Text = $"{app.DisplayName} を +{db:0.0} dB で増幅中";
+                StatusText.Text = $"{app.DisplayName} を +{percent:0}%（約+{db:0.0} dB）で増幅中";
             }
         }
         catch (Exception ex)
         {
             app.StateLabel = "利用できません";
             StatusText.Text = $"開始できませんでした: {ex.Message}";
-            app.BoostDb = 0;
+            app.BoostPercent = 0;
         }
         finally
         {
