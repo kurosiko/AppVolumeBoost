@@ -1,0 +1,92 @@
+<Window x:Class="AppVolumeBoost.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="App Volume Boost"
+        Width="780" Height="560" MinWidth="620" MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource WindowBrush}">
+  <Window.Resources>
+    <DataTemplate x:Key="AppRowTemplate">
+      <Border Margin="0,0,0,8" Padding="12"
+              Background="{StaticResource PanelBrush}"
+              BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+              CornerRadius="9">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="76" />
+          </Grid.ColumnDefinitions>
+
+          <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+            <Border Width="36" Height="36" CornerRadius="8" Background="{StaticResource PrimaryDimBrush}">
+              <Grid>
+                <TextBlock Text="♫" FontSize="17" Foreground="{StaticResource PrimaryBrush}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <Image Source="{Binding Icon}" Width="28" Height="28" Stretch="Uniform" />
+              </Grid>
+            </Border>
+            <StackPanel Margin="11,0,8,0" VerticalAlignment="Center">
+              <TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="SemiBold"
+                         TextTrimming="CharacterEllipsis" />
+              <TextBlock Text="{Binding ProcessLabel}" FontSize="10"
+                         Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0" />
+            </StackPanel>
+          </StackPanel>
+
+          <Slider Grid.Column="1" Minimum="0" Maximum="12" TickFrequency="1"
+                  IsSnapToTickEnabled="False" VerticalAlignment="Center" Height="24"
+                  Value="{Binding BoostDb, UpdateSourceTrigger=PropertyChanged}"
+                  Tag="{Binding}" ValueChanged="BoostSlider_ValueChanged" />
+
+          <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+            <TextBlock Text="{Binding BoostLabel}" FontSize="15" FontWeight="SemiBold"
+                       Foreground="{StaticResource PrimaryBrush}" HorizontalAlignment="Right" />
+            <TextBlock Text="{Binding StateLabel}" FontSize="10"
+                       Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Right"
+                       Margin="0,3,0,0" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </DataTemplate>
+  </Window.Resources>
+
+  <Grid Margin="24,22,24,18">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <Grid Grid.Row="0" Margin="0,0,0,20">
+      <StackPanel>
+        <TextBlock Text="アプリ別音量ブースター" FontSize="23" FontWeight="SemiBold" />
+        <TextBlock Text="特定のアプリだけ音量を増幅します" FontSize="12"
+                   Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,0" />
+      </StackPanel>
+      <Button Content="↻  更新" Click="RefreshButton_Click"
+              HorizontalAlignment="Right" VerticalAlignment="Center" />
+    </Grid>
+
+    <Grid Grid.Row="1" Margin="0,0,0,10">
+      <TextBlock Text="再生中のアプリ" FontSize="14" FontWeight="SemiBold" />
+      <TextBlock x:Name="AppCountText" Text="0 apps" FontSize="11"
+                 Foreground="{StaticResource MutedTextBrush}"
+                 HorizontalAlignment="Right" VerticalAlignment="Center" />
+    </Grid>
+
+    <Border Grid.Row="2">
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl x:Name="AppList" ItemTemplate="{StaticResource AppRowTemplate}" />
+      </ScrollViewer>
+    </Border>
+
+    <Grid Grid.Row="3" Margin="0,14,0,0">
+      <TextBlock x:Name="StatusText" Text="準備中…" FontSize="11"
+                 Foreground="{StaticResource MutedTextBrush}" />
+      <TextBlock Text="+12 dBまで · 音割れに注意" FontSize="10"
+                 Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Right" />
+    </Grid>
+  </Grid>
+</Window>
